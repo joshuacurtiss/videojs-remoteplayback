@@ -18,6 +18,7 @@ export interface RemotePlaybackStrategy {
 }
 
 export interface RemotePlaybackPluginOptions extends Partial<BaseButtonOptions> {
+   addButtonToControlBar: boolean;
    preferNativeAirPlay: boolean;
 }
 
@@ -39,6 +40,7 @@ export function isPlayerWithRemotePlaybackPlugin(o: unknown): o is VideoJsPlayer
 // DEFAULTS / CONSTANTS
 
 const defaultOptions: RemotePlaybackPluginOptions = {
+   addButtonToControlBar: true,
    preferNativeAirPlay: false,
 };
 
@@ -87,7 +89,9 @@ export class RemotePlaybackPlugin extends Plugin {
             this.log.error('No supported strategies available!');
             return;
          }
-         this._addButtonToControlBar();
+         if (this._options.addButtonToControlBar) {
+            this._addButtonToControlBar();
+         }
       });
    }
 
