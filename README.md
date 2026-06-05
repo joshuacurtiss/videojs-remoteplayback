@@ -56,6 +56,9 @@ Once the plugin has been loaded and registered, add it to your Video.js player u
 Video.js' plugin configuration option (see "[Setting up a Plugin][videojs-plugin-setup]"
 on the Video.js docs). Use these options to configure the plugin:
 
+   * **`plugins.remotePlayback.addButtonToControlBar`**: A `boolean` that will use
+     determine whether the button is added to the Video.js control bar.
+     Default: `true`.
    * **`plugins.remotePlayback.preferNativeAirPlay`**: A `boolean` that will use native
      AirPlay APIs when AirPlay is available, instead of Remote Playback API.
      Default: `false`.
