@@ -1,0 +1,10 @@
+{
+   "extends": "@silvermine/typescript-config/browser/tsconfig.json",
+   "compilerOptions": {
+      "lib": ["DOM", "ES2020"],
+      "typeRoots": ["./node_modules/@types", "./@types"]
+   },
+   "include": [
+      "src/**/*",
+   ]
+}

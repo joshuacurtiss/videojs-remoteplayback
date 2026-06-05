@@ -1,0 +1,24 @@
+{
+   "name": "videojs-remoteplayback-example",
+   "version": "0.0.1",
+   "description": "Example implementation of the videojs-remoteplayback plugin",
+   "scripts": {
+      "dev": "vite --config vite.dev.config.ts"
+   },
+   "repository": {
+      "type": "git",
+      "url": "git+https://github.com/silvermine/videojs-remoteplayback.git"
+   },
+   "author": "Jeremy Thomerson",
+   "license": "MIT",
+   "homepage": "https://github.com/silvermine/videojs-remoteplayback#readme",
+   "devDependencies": {
+      "@silvermine/typescript-config": "1.0.0",
+      "@silvermine/video.js": "7.19.0-1",
+      "@silvermine/videojs-remoteplayback": "github:joshuacurtiss/videojs-remoteplayback#jcurtiss/add-chromecast-support",
+      "@types/video.js": "7.3.58",
+      "sass": "1.97.1",
+      "typescript": "5.9.2",
+      "vite": "6.3.6"
+   }
+}

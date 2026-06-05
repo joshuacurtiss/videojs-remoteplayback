@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Video.js Remote Playback Plugin Test</title>
+   <style>
+      body {
+         font-family: Arial, sans-serif;
+         max-width: 800px;
+         margin: 0 auto;
+         padding: 20px;
+      }
+      .video-container {
+         margin: 20px 0;
+      }
+   </style>
+</head>
+<body>
+   <div class="video-container">
+      <video
+         id="remoteplayback-test-player"
+         class="video-js vjs-default-skin vjs-fluid"
+         controls
+         preload="auto"
+         width="640"
+         height="360"
+         data-setup="{}">
+         <source src="https://ia801903.us.archive.org/32/items/BigBuckBunny_328/BigBuckBunny_512kb.mp4" type="video/mp4">
+         <p class="vjs-no-js">
+            To view this video please enable JavaScript, and consider upgrading to a web browser that
+            <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>.
+         </p>
+      </video>
+   </div>
+
+   <script type="module" src="./main.ts"></script>
+</body>
+</html>
