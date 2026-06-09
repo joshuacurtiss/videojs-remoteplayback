@@ -15,7 +15,7 @@
    "devDependencies": {
       "@silvermine/typescript-config": "1.0.0",
       "@silvermine/video.js": "7.19.0-1",
-      "@silvermine/videojs-remoteplayback": "github:joshuacurtiss/videojs-remoteplayback#jcurtiss/add-chromecast-support",
+      "@silvermine/videojs-remoteplayback": "github:joshuacurtiss/videojs-remoteplayback",
       "@types/video.js": "7.3.58",
       "sass": "1.97.1",
       "typescript": "5.9.2",
