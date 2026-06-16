@@ -51,23 +51,22 @@ export class BaseButton extends Button {
          this.hide();
       },
    };
-   private readonly _options: BaseButtonOptions;
 
    public constructor(player: VideoJsPlayer, options: Partial<BaseButtonOptions> = {}) {
+      const { addLabelToButton, label } = Object.assign({}, defaultButtonOptions, options);
+
       super(player, options);
 
-      this._options = Object.assign({}, defaultButtonOptions, options);
-
       // Add label if configured to do so
-      if (this._options.addLabelToButton) {
+      if (addLabelToButton) {
          const labelEl = document.createElement('span');
 
          labelEl.classList.add(CSS_CLASSES.BUTTON_LABEL);
-         labelEl.textContent = this._options.label;
+         labelEl.textContent = label;
          this.el().appendChild(labelEl);
          this.el().classList.add(CSS_CLASSES.BUTTON_LARGE);
       } else {
-         this.controlText(this._options.label);
+         this.controlText(label);
       }
 
       // Add event listeners
