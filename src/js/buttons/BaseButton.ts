@@ -52,13 +52,11 @@ export class BaseButton extends Button {
       },
    };
    private readonly _options: BaseButtonOptions;
-   private readonly _player: VideoJsPlayer;
 
    public constructor(player: VideoJsPlayer, options: Partial<BaseButtonOptions> = {}) {
       super(player, options);
 
       this._options = Object.assign({}, defaultButtonOptions, options);
-      this._player = player;
 
       // Add label if configured to do so
       if (this._options.addLabelToButton) {
@@ -74,7 +72,7 @@ export class BaseButton extends Button {
 
       // Add event listeners
       Object.entries(this._listeners).forEach(([ event, listener ]) => {
-         this._player.on(event, listener);
+         this.player().on(event, listener);
       });
    }
 
@@ -83,12 +81,12 @@ export class BaseButton extends Button {
    }
 
    public handleClick(): void {
-      this._player.trigger(EVENTS.PROMPT_REQUESTED);
+      this.player().trigger(EVENTS.PROMPT_REQUESTED);
    }
 
    public dispose(): void {
       Object.entries(this._listeners).forEach(([ event, listener ]) => {
-         this._player.off(event, listener);
+         this.player().off(event, listener);
       });
       super.dispose();
    }
