@@ -1,11 +1,8 @@
 import type { VideoJsPlayer } from '../../../@types/videojs';
-import { Button } from '@silvermine/video.js';
 import EVENTS from '../constants/events';
 import type { RemotePlaybackPlugin, RemotePlaybackStrategy } from '../RemotePlaybackPlugin';
-import { BaseButtonOptions } from '../buttons/BaseButton';
 import { getVideoElementWithAirPlay, HTMLVideoElementWithAirPlay } from '../lib/get-video-element';
 import { checkClientSupportWithAirPlay } from '../lib/check-client-support';
-import { AirPlayButton } from '../buttons/AirPlayButton';
 
 interface RemotePlaybackAvailabilityEvent extends Event {
    availability: 'available' | 'not-available';
@@ -71,12 +68,6 @@ export class AirPlayManager implements RemotePlaybackStrategy {
 
    public get player(): VideoJsPlayer {
       return this._player;
-   }
-
-   public makeButton(options: Partial<BaseButtonOptions> = {}): Button | undefined {
-      if (checkClientSupportWithAirPlay()) {
-         return new AirPlayButton(this._player, options);
-      }
    }
 
    /**

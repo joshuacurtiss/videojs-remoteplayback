@@ -1,4 +1,3 @@
-import type { Button } from '@silvermine/video.js';
 import type { BaseButtonOptions } from './buttons/BaseButton';
 import type { VideoJsPlayer } from '../../@types/videojs';
 import videojs from '@silvermine/video.js';
@@ -12,7 +11,6 @@ import { checkClientSupportWithAirPlay, checkClientSupport } from './lib/check-c
 export interface RemotePlaybackStrategy {
    kind: 'AirPlay' | 'RemotePlaybackAPI';
    dispose(): void;
-   makeButton(options: Partial<BaseButtonOptions>): Button | undefined;
    prompt(): Promise<void>;
    get player(): VideoJsPlayer;
 }
@@ -45,6 +43,7 @@ const defaultOptions: RemotePlaybackPluginOptions = {
 };
 
 export const COMPONENT_NAMES = {
+   REMOTE_PLAYBACK_BUTTON: 'remotePlaybackButton',
    CONTROL_BAR: 'controlBar',
    FULLSCREEN_TOGGLE: 'fullscreenToggle',
 } as const;
@@ -120,17 +119,12 @@ export class RemotePlaybackPlugin extends Plugin {
          const fullscreenToggle = controlBar.getChild(COMPONENT_NAMES.FULLSCREEN_TOGGLE),
                children = controlBar.children(),
                fullscreenToggleIndex = fullscreenToggle ? children.indexOf(fullscreenToggle) : -1,
-               insertIndex = fullscreenToggleIndex >= 0 ? fullscreenToggleIndex : children.length,
-               button = this.strategy?.makeButton(this._options);
+               insertIndex = fullscreenToggleIndex >= 0 ? fullscreenToggleIndex : children.length;
 
-         if (button) {
-            controlBar.addChild(button, {}, insertIndex);
-            this.log(`Added ${this.strategy?.kind} manager button to control bar at index ${insertIndex}.`);
-         } else {
-            this.log.error(`Failed to create ${this.strategy?.kind} button.`);
-         }
+         controlBar.addChild(COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON, this._options, insertIndex);
+         this.log(`Added ${this.strategy?.kind} ${COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON} to control bar at index ${insertIndex}.`);
       } catch(error) {
-         this.log.error(`Failed to add ${this.strategy?.kind} manager button to control bar,`, error);
+         this.log.error(`Failed to add ${this.strategy?.kind} ${COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON} to control bar,`, error);
       }
    }
 }
