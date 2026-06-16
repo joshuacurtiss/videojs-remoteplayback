@@ -53,7 +53,6 @@ export class BaseButton extends Button {
    };
    private readonly _options: BaseButtonOptions;
    private readonly _player: VideoJsPlayer;
-   private _labelEl?: HTMLSpanElement;
 
    public constructor(player: VideoJsPlayer, options: Partial<BaseButtonOptions> = {}) {
       super(player, options);
@@ -63,13 +62,12 @@ export class BaseButton extends Button {
 
       // Add label if configured to do so
       if (this._options.addLabelToButton) {
+         const labelEl = document.createElement('span');
+
+         labelEl.classList.add(CSS_CLASSES.BUTTON_LABEL);
+         labelEl.textContent = this._options.label;
+         this.el().appendChild(labelEl);
          this.el().classList.add(CSS_CLASSES.BUTTON_LARGE);
-
-         this._labelEl = document.createElement('span');
-         this._labelEl.classList.add(CSS_CLASSES.BUTTON_LABEL);
-         this._labelEl.textContent = this._options.label;
-
-         this.el().appendChild(this._labelEl);
       } else {
          this.controlText(this._options.label);
       }
