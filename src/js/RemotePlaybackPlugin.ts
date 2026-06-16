@@ -30,8 +30,10 @@ export function isPlayerWithRemotePlaybackPlugin(o: unknown): o is VideoJsPlayer
       'currentTime' in o && typeof o.currentTime === 'function' &&
       'play' in o && typeof o.play === 'function' &&
       'pause' in o && typeof o.pause === 'function' &&
+      // Use `hasPlugin` so type guard works if plugin isn't initialized yet
+      'hasPlugin' in o && typeof o.hasPlugin === 'function' &&
       // Finally, check for presence of our plugin
-      'remotePlayback' in o && typeof o.remotePlayback === 'function';
+      o.hasPlugin('remotePlayback') && 'remotePlayback' in o && typeof o.remotePlayback === 'function';
 }
 
 // DEFAULTS / CONSTANTS
