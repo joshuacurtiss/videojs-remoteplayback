@@ -5,17 +5,16 @@ import type { VideoJsPlayer } from '../@types/videojs';
 import EVENTS from '../src/js/constants/events';
 import { BaseButton } from '../src/js/buttons/BaseButton';
 import { AirPlayButton } from '../src/js/buttons/AirPlayButton';
-import { RemotePlaybackStrategy } from '../src/js/RemotePlaybackPlugin';
 
 interface ListenerMap {
    [event: string]: () => void;
 }
 
 interface TestContext {
-   manager: RemotePlaybackStrategy;
    player: VideoJsPlayer & {
       on: ReturnType<typeof vi.fn>;
       off: ReturnType<typeof vi.fn>;
+      trigger: ReturnType<typeof vi.fn>;
       usingPlugin: ReturnType<typeof vi.fn>;
       remotePlayback: ReturnType<typeof vi.fn>;
    };
@@ -28,6 +27,7 @@ function createContext(): TestContext {
          pluginError = vi.fn(),
          on = vi.fn((event: string, listener: () => void) => { listeners[event] = listener; }),
          off = vi.fn(),
+         trigger = vi.fn(),
          usingPlugin = vi.fn().mockReturnValue(true),
          remotePlayback = vi.fn().mockReturnValue({ log: { error: pluginError } });
 
@@ -36,18 +36,10 @@ function createContext(): TestContext {
       off,
       usingPlugin,
       remotePlayback,
+      trigger,
    } as TestContext['player'];
 
-   const manager: RemotePlaybackStrategy = {
-      dispose: vi.fn(),
-      kind: 'RemotePlaybackAPI',
-      makeButton: (options) => { return new BaseButton(manager, options); },
-      player,
-      prompt: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
-   };
-
    return {
-      manager,
       player,
       listeners,
       pluginError,
@@ -60,8 +52,8 @@ describe('BaseButton', () => {
    });
 
    it('registers listeners and appends a label by default', () => {
-      const { manager, player } = createContext(),
-            button = new BaseButton(manager, { label: 'AirPlay' }),
+      const { player } = createContext(),
+            button = new BaseButton(player, { label: 'AirPlay' }),
             label = button.el().querySelector('.vjs-remoteplayback-button-label');
 
       expect(player.on).toHaveBeenCalledTimes(5);
@@ -76,16 +68,16 @@ describe('BaseButton', () => {
    });
 
    it('uses controlText when label rendering is disabled', () => {
-      const { manager } = createContext(),
-            button = new BaseButton(manager, { addLabelToButton: false, label: 'Cast' });
+      const { player } = createContext(),
+            button = new BaseButton(player, { addLabelToButton: false, label: 'Cast' });
 
       expect((button as unknown as MockButton)._controlText).toBe('Cast');
       expect(button.el().querySelector('.vjs-remoteplayback-button-label')).toBeNull();
    });
 
    it('reacts to player events with expected class and visibility changes', () => {
-      const { manager, listeners } = createContext(),
-            button = new BaseButton(manager);
+      const { player, listeners } = createContext(),
+            button = new BaseButton(player);
 
       const showSpy = vi.spyOn(button, 'show'),
             hideSpy = vi.spyOn(button, 'hide');
@@ -110,25 +102,25 @@ describe('BaseButton', () => {
    });
 
    it('buildCSSClass prepends the component class', () => {
-      const { manager } = createContext(),
-            button = new BaseButton(manager),
+      const { player } = createContext(),
+            button = new BaseButton(player),
             classes = button.buildCSSClass();
 
       expect(classes).toContain('vjs-remoteplayback-button');
       expect(classes).toContain('vjs-control');
    });
 
-   it('handleClick prompts the manager when available', () => {
-      const { manager } = createContext(),
-            button = new BaseButton(manager);
+   it('handleClick emits a remote playback intent', () => {
+      const { player } = createContext(),
+            button = new BaseButton(player);
 
       button.handleClick();
-      expect(manager.prompt).toHaveBeenCalledTimes(1);
+      expect(player.trigger).toHaveBeenCalledTimes(1);
    });
 
    it('dispose removes all listeners and calls super.dispose', () => {
-      const { manager, player, listeners } = createContext(),
-            button = new BaseButton(manager);
+      const { player, listeners } = createContext(),
+            button = new BaseButton(player);
 
       button.dispose();
 
@@ -148,8 +140,8 @@ describe('AirPlayButton', () => {
    });
 
    it('uses AirPlay defaults and prepends its CSS class', () => {
-      const { manager } = createContext(),
-            button = new AirPlayButton(manager),
+      const { player } = createContext(),
+            button = new AirPlayButton(player),
             label = button.el().querySelector('.vjs-remoteplayback-button-label'),
             classes = button.buildCSSClass();
 

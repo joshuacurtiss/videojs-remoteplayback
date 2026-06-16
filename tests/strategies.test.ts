@@ -2,9 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import './mocks/video-js-mock';
 import type { VideoJsPlayer } from '../@types/videojs';
 import type { RemotePlaybackStrategy } from '../src/js/RemotePlaybackPlugin';
+import EVENTS from '../src/js/constants/events';
 import { AirPlayManager } from '../src/js/strategies/AirPlayManager';
 import { RemotePlaybackManager } from '../src/js/strategies/RemotePlaybackManager';
 import { checkClientSupport, checkClientSupportWithAirPlay } from '../src/js/lib/check-client-support';
+import { BaseButton } from '../src/js/buttons/BaseButton';
 
 vi.mock('../src/js/lib/check-client-support', () => {
    return {
@@ -184,13 +186,14 @@ describe.each(STRATEGIES)('$name', (strategy) => {
    });
 
    it('creates a button that delegates clicks to prompt', () => {
-      const promptSpy = vi.spyOn(manager, 'prompt').mockResolvedValue(undefined),
-            button = manager.makeButton({});
+      const triggerSpy = vi.spyOn(context.player, 'trigger'),
+            button = new BaseButton(context.player);
 
       expect(button).toBeDefined();
       expect(button?.buildCSSClass()).toContain('vjs-remoteplayback-button');
-      button?.handleClick({} as any);
-      expect(promptSpy).toHaveBeenCalledTimes(1);
+      button?.handleClick();
+      expect(triggerSpy).toHaveBeenCalledTimes(1);
+      expect(triggerSpy).toHaveBeenCalledWith(EVENTS.PROMPT_REQUESTED);
    });
 
    it('prompts using the strategy-specific browser API', async () => {
