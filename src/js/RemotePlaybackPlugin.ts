@@ -51,7 +51,6 @@ const Plugin = videojs.getPlugin('plugin');
 
 export class RemotePlaybackPlugin extends Plugin {
    public readonly log!: videojs.Log;
-   private readonly _player: VideoJsPlayer;
    private readonly _options: RemotePlaybackPluginOptions;
    private _strategy: RemotePlaybackStrategy | undefined;
    private readonly _listeners = {
@@ -69,21 +68,21 @@ export class RemotePlaybackPlugin extends Plugin {
 
    public constructor(player: videojs.Player, options: Partial<RemotePlaybackPluginOptions> = {}) {
       super(player, options);
-      // The constructor receives a standard Video.js Player, but then we assert the type
-      // of our custom VideoJsPlayer. This is safe because the plugin has been registered
-      // at this point.
-      this._player = player as VideoJsPlayer;
       this._options = Object.assign({}, defaultOptions, options);
       Object.entries(this._listeners).forEach(([ event, listener ]) => {
-         this._player.on(event, listener);
+         this.player.on(event, listener);
       });
-      this._player.ready(() => {
+      this.player.ready(() => {
+         if (!isPlayerWithRemotePlaybackPlugin(this.player)) {
+            this.log.error('Player is missing the plugin!');
+            return;
+         }
          if (this._options.preferNativeAirPlay && checkClientSupportWithAirPlay()) {
             this.log('Initializing with native AirPlay strategy.');
-            this._strategy = new AirPlayManager(this._player);
+            this._strategy = new AirPlayManager(this.player);
          } else if (checkClientSupport()) {
             this.log('Initializing with Remote Playback API strategy.');
-            this._strategy = new RemotePlaybackManager(this._player);
+            this._strategy = new RemotePlaybackManager(this.player);
          } else {
             this.log.error('No supported strategies available!');
             return;
@@ -95,7 +94,7 @@ export class RemotePlaybackPlugin extends Plugin {
    public dispose(): void {
       this.log(`Disposing of ${this.strategy?.kind} strategy.`);
       Object.entries(this._listeners).forEach(([ event, listener ]) => {
-         this._player.off(event, listener);
+         this.player.off(event, listener);
       });
       this.strategy?.dispose();
       super.dispose();
@@ -106,7 +105,7 @@ export class RemotePlaybackPlugin extends Plugin {
    }
 
    private _addButtonToControlBar(): void {
-      const controlBar = this._player.getChild(COMPONENT_NAMES.CONTROL_BAR);
+      const controlBar = this.player.getChild(COMPONENT_NAMES.CONTROL_BAR);
 
       if (!controlBar) {
          this.log.error(`Control bar component not found. Cannot add ${this.strategy?.kind} manager button.`);
