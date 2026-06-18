@@ -62,7 +62,7 @@ export class BaseButton extends Button {
          const labelEl = document.createElement('span');
 
          labelEl.classList.add(CSS_CLASSES.BUTTON_LABEL);
-         labelEl.textContent = label;
+         labelEl.textContent = this.localize(label);
          this.el().appendChild(labelEl);
          this.el().classList.add(CSS_CLASSES.BUTTON_LARGE);
       } else {
