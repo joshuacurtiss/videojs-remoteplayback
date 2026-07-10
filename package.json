@@ -11,7 +11,7 @@
          "import": "./dist/videojs-remoteplayback.mjs",
          "require": "./dist/videojs-remoteplayback.umd.js"
       },
-      "./dist/videojs-remoteplayback.css": "./dist/videojs-remoteplayback.css"
+      "./styles.css": "./dist/videojs-remoteplayback.css"
    },
    "files": [
       "dist/"
