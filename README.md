@@ -50,6 +50,71 @@ Install it with `npm install @silvermine/videojs-remoteplayback`. Ensure its pee
 dependencies are installed, namely, [Video.js][videojs]. Configure it according to the
 configuration instructions below.
 
+If you're using TypeScript, also install `@types/video.js`, since Video.js 7 does not ship
+its own type declarations. This is listed as an optional peer dependency, so npm 7+ will
+install it for you automatically; pnpm and yarn classic users should add it manually with
+`npm install --save-dev @types/video.js` (or an equivalent command for your package
+manager).
+
+To use the CSS used by the plugin, be sure to import it into your project like this:
+
+```js
+import '@silvermine/videojs-remoteplayback/styles.css';
+```
+
+### Using a forked video.js build
+
+This plugin expects a `video.js` implementation that is compatible with Video.js 7.x. If
+desired, this could be a forked version of video.js.
+
+The plugin will use the instance of video.js that you pass into `initializePlugin`.
+
+### Initializing the plugin (full examples)
+
+With typical ESM, your initialization of the plugin may look something like the example
+below. Remember, if you're using TypeScript, install `@types/video.js` alongside
+`video.js`, as described above.
+
+```ts
+import videojs from 'video.js';
+import initializePlugin, { isPlayerWithRemotePlaybackPlugin } from '@silvermine/videojs-remoteplayback';
+import 'video.js/dist/video-js.css';
+import '@silvermine/videojs-remoteplayback/styles.css';
+
+initializePlugin(videojs);
+
+const player = videojs('your-video-name');
+
+if (isPlayerWithRemotePlaybackPlugin(player)) {
+   player.remotePlayback();
+} else {
+   videojs.log.error('Failed to startup Remote Playback plugin.');
+}
+```
+
+Using UMD, your initialization of the plugin may have these script tags at the bottom of
+your HTML:
+
+```html
+<link
+   rel="stylesheet"
+   href="https://cdn.jsdelivr.net/npm/video.js@7.21.7/dist/video-js.min.css"
+   integrity="m/+gruJNOZgxOA44GgPxiXxSBPKfJTu36EVTc8fYIVPKd6V8pBhUoCHx/Zl71xQL"
+   crossorigin="anonymous" />
+<script
+   src="https://cdn.jsdelivr.net/npm/video.js@7.21.7/dist/video.min.js"
+   integrity="Y3EQVQUuP3pM9Mj1YjwJhLxImXD5UIFtZVttZR+PnnpTUsGwZ95wwEq818s1Yc68"
+   crossorigin="anonymous">
+</script>
+<script src="path/to/videojs-remoteplayback.umd.js"></script>
+<link rel="stylesheet" href="path/to/videojs-remoteplayback.css">
+<script>
+   VideoJsRemotePlayback.default(videojs);
+   const player = videojs('remoteplayback-test-player');
+   player.remotePlayback();
+</script>
+```
+
 ### Configuration
 
 Once the plugin has been loaded and registered, add it to your Video.js player using
