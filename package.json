@@ -65,6 +65,6 @@
       "vitest": "3.2.4"
    },
    "peerDependencies": {
-      "@silvermine/video.js": "7.19.0-1"
+      "video.js": ">=7.0.0 <8.0.0"
    }
 }

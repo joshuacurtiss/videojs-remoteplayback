@@ -20,13 +20,13 @@ export default defineConfig({
          formats: [ 'es', 'umd' ],
       },
       rollupOptions: {
-         external: [ '@silvermine/video.js' ],
+         external: [ 'video.js' ],
          output: {
             exports: 'named',
-            globals: {
-               '@silvermine/video.js': 'videojs',
-            },
             assetFileNames: 'videojs-remoteplayback.css',
+            globals: {
+               'video.js': 'videojs',
+            },
          },
       },
       assetsInlineLimit: 10000, // Inline assets smaller than 10KB (our SVG is ~623 bytes)

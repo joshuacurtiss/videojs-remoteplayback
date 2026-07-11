@@ -6,4 +6,10 @@ export default defineConfig({
       port: 3000,
       open: true,
    },
+   // Uncomment to validate this plugin against a forked video.js build locally.
+   // resolve: {
+   //    alias: {
+   //       'video.js': '/absolute/path/to/your/video.js/fork',
+   //    },
+   // },
 });
