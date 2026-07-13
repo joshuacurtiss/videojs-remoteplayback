@@ -1,6 +1,6 @@
 import type { BaseButtonOptions } from './buttons/BaseButton';
 import type { VideoJsPlayer } from '../../@types/videojs';
-import videojs from '@silvermine/video.js';
+import videojs from 'video.js';
 import EVENTS from './constants/events';
 import { AirPlayManager } from './strategies/AirPlayManager';
 import { RemotePlaybackManager } from './strategies/RemotePlaybackManager';
