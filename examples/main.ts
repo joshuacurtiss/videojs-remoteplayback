@@ -1,7 +1,7 @@
-import videojs from '@silvermine/video.js';
+import videojs from 'video.js';
 import initializePlugin from '../src/js/index';
 import { isPlayerWithRemotePlaybackPlugin } from '../src/js/RemotePlaybackPlugin';
-import '@silvermine/video.js/dist/video-js.css';
+import 'video.js/dist/video-js.css';
 import '../src/styles/index.scss';
 
 initializePlugin(videojs);
