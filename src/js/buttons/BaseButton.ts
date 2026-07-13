@@ -1,11 +1,10 @@
-import videojs from '@silvermine/video.js';
-import type { ComponentOptions } from '@silvermine/video.js';
+import videojs from 'video.js';
 import type { VideoJsPlayer } from '../../../@types/videojs';
 import EVENTS from '../constants/events';
 
 // INTERFACES
 
-export interface BaseButtonOptions extends ComponentOptions {
+export interface BaseButtonOptions extends videojs.ComponentOptions {
    addLabelToButton: boolean;
    label: string;
 }
