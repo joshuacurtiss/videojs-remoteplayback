@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import './mocks/video-js-mock';
-import videojs from '@silvermine/video.js';
+import videojs from 'video.js';
 import initializePlugin from '../src/js';
 import { COMPONENT_NAMES, RemotePlaybackPlugin } from '../src/js/RemotePlaybackPlugin';
 import EVENTS from '../src/js/constants/events';
