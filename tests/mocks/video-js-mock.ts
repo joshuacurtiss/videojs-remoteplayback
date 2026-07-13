@@ -56,7 +56,7 @@ export class MockButton {
    }
 }
 
-vi.mock('@silvermine/video.js', () => {
+vi.mock('video.js', () => {
    class MockPlugin {
       public readonly log: ReturnType<typeof vi.fn> & { error: ReturnType<typeof vi.fn> };
       public readonly player: VideoJsPlayer;
