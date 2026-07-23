@@ -1,6 +1,6 @@
 import type { VideoJsPlayer } from '../../../@types/videojs';
 import EVENTS from '../constants/events';
-import { RemotePlaybackPlugin, RemotePlaybackStrategy } from '../RemotePlaybackPlugin';
+import type { RemotePlaybackPlugin, RemotePlaybackStrategy } from '../RemotePlaybackPlugin';
 import { getVideoElement } from '../lib/get-video-element';
 import { checkClientSupport } from '../lib/check-client-support';
 
