@@ -7,7 +7,7 @@ import EVENTS from '../src/js/constants/events';
 import { AirPlayButton } from '../src/js/buttons/AirPlayButton';
 import { BaseButton } from '../src/js/buttons/BaseButton';
 import { checkClientSupport, checkClientSupportWithAirPlay } from '../src/js/lib/check-client-support';
-import { VideoJsPlayer } from '../@types/videojs';
+import type { VideoJsPlayer } from '../@types/videojs';
 
 vi.mock('../src/js/lib/check-client-support', () => {
    return {
