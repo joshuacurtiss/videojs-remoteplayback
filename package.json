@@ -14,11 +14,9 @@
    "homepage": "https://github.com/silvermine/videojs-remoteplayback#readme",
    "devDependencies": {
       "@silvermine/typescript-config": "1.0.0",
-      "@silvermine/videojs-remoteplayback": "github:joshuacurtiss/videojs-remoteplayback#publish-improvements-wip",
       "@types/video.js": "7.3.58",
       "sass": "1.97.1",
       "typescript": "5.9.2",
-      "video.js": "^7",
       "vite": "6.3.6"
    }
 }
