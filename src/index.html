@@ -4,6 +4,18 @@
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Video.js Remote Playback Plugin Test</title>
+   <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/video.js@7.21.7/dist/video-js.min.css"
+      integrity="sha384-m/+gruJNOZgxOA44GgPxiXxSBPKfJTu36EVTc8fYIVPKd6V8pBhUoCHx/Zl71xQL"
+      crossorigin="anonymous" />
+   <script
+      src="https://cdn.jsdelivr.net/npm/video.js@7.21.7/dist/video.min.js"
+      integrity="sha384-Y3EQVQUuP3pM9Mj1YjwJhLxImXD5UIFtZVttZR+PnnpTUsGwZ95wwEq818s1Yc68"
+      crossorigin="anonymous">
+   </script>
+   <script src="videojs-remoteplayback.umd.js"></script>
+   <link rel="stylesheet" href="videojs-remoteplayback.css">
    <style>
       body {
          font-family: Arial, sans-serif;
@@ -34,6 +46,10 @@
       </video>
    </div>
 
-   <script type="module" src="./main.ts"></script>
+   <script>
+      VideoJsRemotePlayback.default(videojs);
+      const player = videojs('remoteplayback-test-player');
+      player.remotePlayback();
+   </script>
 </body>
 </html>
