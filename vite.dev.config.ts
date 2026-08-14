@@ -6,9 +6,4 @@ export default defineConfig({
       port: 3000,
       open: true,
    },
-   resolve: {
-      alias: {
-         'video.js': '@silvermine/video.js',
-      }
-   },
 });
