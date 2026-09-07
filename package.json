@@ -65,6 +65,12 @@
       "vitest": "3.2.4"
    },
    "peerDependencies": {
-      "video.js": ">=7.0.0 <8.0.0"
+      "video.js": ">=7.0.0 <8.0.0",
+      "@types/video.js": "7.3.58"
+   },
+   "peerDependenciesMeta": {
+      "@types/video.js": {
+         "optional": true
+      }
    }
 }
