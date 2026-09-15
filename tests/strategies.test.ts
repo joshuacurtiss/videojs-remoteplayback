@@ -1,12 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import './mocks/video-js-mock';
+import videojs from 'video.js';
 import type { VideoJsPlayer } from '../@types/videojs';
 import type { RemotePlaybackStrategy } from '../src/js/RemotePlaybackPlugin';
 import EVENTS from '../src/js/constants/events';
 import { AirPlayManager } from '../src/js/strategies/AirPlayManager';
 import { RemotePlaybackManager } from '../src/js/strategies/RemotePlaybackManager';
 import { checkClientSupport, checkClientSupportWithAirPlay } from '../src/js/lib/check-client-support';
-import { BaseButton } from '../src/js/buttons/BaseButton';
+import { createBaseButtonConstructor } from '../src/js/buttons';
+
+const BaseButton = createBaseButtonConstructor(videojs);
 
 vi.mock('../src/js/lib/check-client-support', () => {
    return {
@@ -187,11 +190,12 @@ describe.each(STRATEGIES)('$name', (strategy) => {
 
    it('creates a button that delegates clicks to prompt', () => {
       const triggerSpy = vi.spyOn(context.player, 'trigger'),
+            mockEvent = {} as videojs.EventTarget.Event,
             button = new BaseButton(context.player);
 
       expect(button).toBeDefined();
       expect(button?.buildCSSClass()).toContain('vjs-remoteplayback-button');
-      button?.handleClick();
+      button?.handleClick(mockEvent);
       expect(triggerSpy).toHaveBeenCalledTimes(1);
       expect(triggerSpy).toHaveBeenCalledWith(EVENTS.PROMPT_REQUESTED);
    });

@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import './mocks/video-js-mock';
 import videojs from 'video.js';
 import initializePlugin from '../src/js';
-import { COMPONENT_NAMES, RemotePlaybackPlugin } from '../src/js/RemotePlaybackPlugin';
+import { createButtonConstructor } from '../src/js/buttons';
+import { COMPONENT_NAMES, createRemotePlaybackPluginConstructor } from '../src/js/RemotePlaybackPlugin';
+import type { RemotePlaybackPlugin } from '../src/js/RemotePlaybackPlugin';
 import EVENTS from '../src/js/constants/events';
-import { AirPlayButton } from '../src/js/buttons/AirPlayButton';
-import { BaseButton } from '../src/js/buttons/BaseButton';
 import { checkClientSupport, checkClientSupportWithAirPlay } from '../src/js/lib/check-client-support';
 import type { VideoJsPlayer } from '../@types/videojs';
 
@@ -100,22 +100,11 @@ describe('Remote Playback Plugin', () => {
       expect(videojs.registerPlugin).toHaveBeenCalled();
    });
 
-   it('registers BaseButton when AirPlay is unavailable', () => {
-      vi.mocked(checkClientSupportWithAirPlay).mockReturnValue(false);
-      initializePlugin(videojs);
-      expect(videojs.registerComponent).toHaveBeenCalledWith(COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON, BaseButton);
-   });
-
-   it('registers AirPlayButton when AirPlay is available', () => {
-      vi.mocked(checkClientSupportWithAirPlay).mockReturnValue(true);
-      initializePlugin(videojs);
-      expect(videojs.registerComponent).toHaveBeenCalledWith(COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON, AirPlayButton);
-   });
-
    it('adds remote playback button to control bar when addButtonToControlBar is true', () => {
-      const { controlBar, player } = createPlayerContext();
+      const { controlBar, player } = createPlayerContext(),
+            RemotePlaybackPluginConstructor = createRemotePlaybackPluginConstructor(videojs);
 
-      new RemotePlaybackPlugin(player, { addButtonToControlBar: true }); // eslint-disable-line no-new
+      new RemotePlaybackPluginConstructor(player, { addButtonToControlBar: true }); // eslint-disable-line no-new
       expect(controlBar.addChild).toHaveBeenCalledTimes(1);
       expect(controlBar.addChild).toHaveBeenCalledWith(
          COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON,
@@ -126,7 +115,8 @@ describe('Remote Playback Plugin', () => {
 
    it('does not add remote playback button to control bar when addButtonToControlBar is false', () => {
       const { controlBar, player } = createPlayerContext(),
-            plugin = new RemotePlaybackPlugin(player, { addButtonToControlBar: false });
+            RemotePlaybackPluginConstructor = createRemotePlaybackPluginConstructor(videojs),
+            plugin = new RemotePlaybackPluginConstructor(player, { addButtonToControlBar: false }) as RemotePlaybackPlugin;
 
       expect(plugin.strategy).toBeDefined();
       expect(controlBar.addChild).not.toHaveBeenCalled();
@@ -134,7 +124,8 @@ describe('Remote Playback Plugin', () => {
 
    it('routes prompt intent to the active strategy', async () => {
       const { player } = createPlayerContext(),
-            plugin = new RemotePlaybackPlugin(player, { addButtonToControlBar: false });
+            RemotePlaybackPluginConstructor = createRemotePlaybackPluginConstructor(videojs),
+            plugin = new RemotePlaybackPluginConstructor(player, { addButtonToControlBar: false }) as RemotePlaybackPlugin;
 
       expect(player.on).toHaveBeenCalledWith(EVENTS.PROMPT_REQUESTED, expect.any(Function));
       expect(plugin.strategy).toBeDefined();
@@ -143,9 +134,11 @@ describe('Remote Playback Plugin', () => {
       }
 
       const promptSpy = vi.spyOn(plugin.strategy, 'prompt').mockResolvedValue(undefined),
-            button = new BaseButton(player);
+            RemotePlaybackButton = createButtonConstructor(videojs),
+            mockEvent = {} as videojs.EventTarget.Event,
+            button = new RemotePlaybackButton(player);
 
-      button.handleClick();
+      button.handleClick(mockEvent);
 
       expect(player.trigger).toHaveBeenCalledWith(EVENTS.PROMPT_REQUESTED);
       expect(promptSpy).toHaveBeenCalledTimes(1);

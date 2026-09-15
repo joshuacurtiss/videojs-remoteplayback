@@ -1,10 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import './mocks/video-js-mock';
+import videojs from 'video.js';
 import type { MockButton } from './mocks/video-js-mock';
 import type { VideoJsPlayer } from '../@types/videojs';
 import EVENTS from '../src/js/constants/events';
-import { BaseButton } from '../src/js/buttons/BaseButton';
-import { AirPlayButton } from '../src/js/buttons/AirPlayButton';
+import { createButtonConstructor, createAirPlayButtonConstructor, createBaseButtonConstructor } from '../src/js/buttons';
+import { checkClientSupportWithAirPlay } from '../src/js/lib/check-client-support';
+
+vi.mock('../src/js/lib/check-client-support', () => {
+   return {
+      checkClientSupportWithAirPlay: vi.fn(),
+   };
+});
+
+const BaseButton = createBaseButtonConstructor(videojs),
+      AirPlayButton = createAirPlayButtonConstructor(videojs);
 
 interface ListenerMap {
    [event: string]: () => void;
@@ -45,6 +55,32 @@ function createContext(): TestContext {
       pluginError,
    };
 }
+
+describe('Button Constructors', () => {
+   beforeEach(() => {
+      vi.clearAllMocks();
+   });
+
+   it('provides BaseButton when AirPlay is unavailable', () => {
+      vi.mocked(checkClientSupportWithAirPlay).mockReturnValue(false);
+
+      const Button = createButtonConstructor(videojs),
+            { player } = createContext(),
+            button = new Button(player);
+
+      expect(button.buildCSSClass()).not.toContain('airplay');
+   });
+
+   it('provides AirPlayButton when AirPlay is available', () => {
+      vi.mocked(checkClientSupportWithAirPlay).mockReturnValue(true);
+
+      const Button = createButtonConstructor(videojs),
+            { player } = createContext(),
+            button = new Button(player);
+
+      expect(button.buildCSSClass()).toContain('airplay');
+   });
+});
 
 describe('BaseButton', () => {
    beforeEach(() => {
@@ -112,9 +148,10 @@ describe('BaseButton', () => {
 
    it('handleClick emits a remote playback intent', () => {
       const { player } = createContext(),
+            mockEvent = {} as videojs.EventTarget.Event,
             button = new BaseButton(player);
 
-      button.handleClick();
+      button.handleClick(mockEvent);
       expect(player.trigger).toHaveBeenCalledTimes(1);
       expect(player.trigger).toHaveBeenCalledWith(EVENTS.PROMPT_REQUESTED);
    });
