@@ -1,5 +1,7 @@
-import type { VideoJsPlayer } from '../../../@types/videojs';
-import { BaseButton, BaseButtonOptions } from './BaseButton';
+import type videojs from 'video.js';
+import type { VideoJs } from '../../../@types/videojs';
+import type { RemotePlaybackButtonConstructor } from './index';
+import { createBaseButtonConstructor, BaseButtonOptions } from './BaseButton';
 
 // DEFAULTS
 
@@ -8,14 +10,21 @@ export const defaultAirPlayButtonOptions: BaseButtonOptions = {
    label: 'AirPlay',
 };
 
-export class AirPlayButton extends BaseButton {
+/**
+ * Factory function that creates a button constructor for an AirPlay button.
+ */
+export const createAirPlayButtonConstructor = (videojs: VideoJs): RemotePlaybackButtonConstructor => {
+   const BaseButton = createBaseButtonConstructor(videojs);
 
-   public constructor(player: VideoJsPlayer, options: Partial<BaseButtonOptions> = {}) {
-      super(player, Object.assign({}, defaultAirPlayButtonOptions, options));
-   }
+   return class extends BaseButton {
 
-   public buildCSSClass(): string {
-      return `airplay ${super.buildCSSClass()}`;
-   }
+      public constructor(player: videojs.Player, options: Partial<BaseButtonOptions> = {}) {
+         super(player, Object.assign({}, defaultAirPlayButtonOptions, options));
+      }
 
-}
+      public buildCSSClass(): string {
+         return `airplay ${super.buildCSSClass()}`;
+      }
+
+   };
+};
