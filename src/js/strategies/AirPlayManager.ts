@@ -1,7 +1,7 @@
 import type { VideoJsPlayer } from '../../../@types/videojs';
 import EVENTS from '../constants/events';
 import type { RemotePlaybackPlugin, RemotePlaybackStrategy } from '../RemotePlaybackPlugin';
-import { getVideoElementWithAirPlay, HTMLVideoElementWithAirPlay } from '../lib/get-video-element';
+import { getMediaElementWithAirPlay, HTMLMediaElementWithAirPlay } from '../lib/get-media-element';
 import { checkClientSupportWithAirPlay } from '../lib/check-client-support';
 
 interface RemotePlaybackAvailabilityEvent extends Event {
@@ -32,8 +32,8 @@ export class AirPlayManager implements RemotePlaybackStrategy {
          }
       },
       'webkitcurrentplaybacktargetiswirelesschanged': () => {
-         this.plugin?.log('AirPlay playback target changed. Is wireless:', this._videoElement?.webkitCurrentPlaybackTargetIsWireless);
-         if (this._videoElement?.webkitCurrentPlaybackTargetIsWireless) {
+         this.plugin?.log('AirPlay playback target changed. Is wireless:', this._mediaElement?.webkitCurrentPlaybackTargetIsWireless);
+         if (this._mediaElement?.webkitCurrentPlaybackTargetIsWireless) {
             this._player.trigger(EVENTS.CONNECTED);
          } else {
             this._player.trigger(EVENTS.DISCONNECTED);
@@ -41,7 +41,7 @@ export class AirPlayManager implements RemotePlaybackStrategy {
       },
    };
    private readonly _player: VideoJsPlayer;
-   private _videoElement: HTMLVideoElementWithAirPlay | null = null;
+   private _mediaElement: HTMLMediaElementWithAirPlay | null = null;
 
    public constructor(player: VideoJsPlayer) {
       this._player = player;
@@ -52,16 +52,16 @@ export class AirPlayManager implements RemotePlaybackStrategy {
          return;
       }
 
-      // Get the video element
-      const videoElement = getVideoElementWithAirPlay(this._player);
+      // Get the media element
+      const mediaElement = getMediaElementWithAirPlay(this._player);
 
-      if (!videoElement) {
-         this.plugin?.log.error('Video element with AirPlay support not found.');
+      if (!mediaElement) {
+         this.plugin?.log.error('Media element with AirPlay support not found.');
          return;
       }
 
       // Only after all checks do we hold a reference to element and set up listeners
-      this._videoElement = videoElement;
+      this._mediaElement = mediaElement;
       this._setupEventListeners();
       this.plugin?.log('Native AirPlay strategy initialization successful.');
    }
@@ -74,12 +74,12 @@ export class AirPlayManager implements RemotePlaybackStrategy {
     * Open the AirPlay device picker for the current media element.
     */
    public async prompt(): Promise<void> {
-      if (!this._videoElement) {
-         this.plugin?.log.error('No video element with AirPlay support was captured during initialization!');
+      if (!this._mediaElement) {
+         this.plugin?.log.error('No media element with AirPlay support was captured during initialization!');
          return;
       }
       try {
-         this._videoElement.webkitShowPlaybackTargetPicker();
+         this._mediaElement.webkitShowPlaybackTargetPicker();
          this.plugin?.log('Native AirPlay device picker opened.');
       } catch(error) {
          this.plugin?.log.error('Failed to open AirPlay device picker!', error);
@@ -91,9 +91,9 @@ export class AirPlayManager implements RemotePlaybackStrategy {
     */
    public dispose(): void {
       Object.entries(this._listeners).forEach(([ event, listener ]) => {
-         this._videoElement?.removeEventListener(event, listener);
+         this._mediaElement?.removeEventListener(event, listener);
       });
-      this._videoElement = null;
+      this._mediaElement = null;
    }
 
    private get plugin(): RemotePlaybackPlugin | undefined {
@@ -106,12 +106,12 @@ export class AirPlayManager implements RemotePlaybackStrategy {
     * respond to events.
     */
    private _setupEventListeners(): void {
-      if (!this._videoElement) {
+      if (!this._mediaElement) {
          return;
       }
 
       Object.entries(this._listeners).forEach(([ event, listener ]) => {
-         this._videoElement?.addEventListener(event, listener);
+         this._mediaElement?.addEventListener(event, listener);
       });
    }
 

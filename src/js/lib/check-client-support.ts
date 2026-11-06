@@ -3,8 +3,8 @@
  */
 export function checkClientSupport(): boolean {
    return typeof window !== 'undefined' &&
-      'HTMLVideoElement' in window &&
-      'remote' in HTMLVideoElement.prototype;
+      'HTMLMediaElement' in window &&
+      'remote' in HTMLMediaElement.prototype;
 }
 
 /**
@@ -12,6 +12,6 @@ export function checkClientSupport(): boolean {
  */
 export function checkClientSupportWithAirPlay(): boolean {
    return typeof window !== 'undefined' &&
-      'HTMLVideoElement' in window &&
+      'HTMLMediaElement' in window &&
       'WebKitPlaybackTargetAvailabilityEvent' in window;
 }

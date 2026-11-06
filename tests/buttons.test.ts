@@ -24,6 +24,7 @@ interface TestContext {
    player: VideoJsPlayer & {
       on: ReturnType<typeof vi.fn>;
       off: ReturnType<typeof vi.fn>;
+      tech: ReturnType<typeof vi.fn<() => { el: ReturnType<typeof vi.fn> }>>;
       trigger: ReturnType<typeof vi.fn>;
       usingPlugin: ReturnType<typeof vi.fn>;
       remotePlayback: ReturnType<typeof vi.fn>;
@@ -44,6 +45,7 @@ function createContext(): TestContext {
    const player = {
       on,
       off,
+      tech: vi.fn().mockReturnValue({ el: vi.fn() }),
       usingPlugin,
       remotePlayback,
       trigger,

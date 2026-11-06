@@ -1,7 +1,7 @@
 import type { VideoJsPlayer } from '../../../@types/videojs';
 import EVENTS from '../constants/events';
 import type { RemotePlaybackPlugin, RemotePlaybackStrategy } from '../RemotePlaybackPlugin';
-import { getVideoElement } from '../lib/get-video-element';
+import { getMediaElement } from '../lib/get-media-element';
 import { checkClientSupport } from '../lib/check-client-support';
 
 /**
@@ -27,16 +27,16 @@ export class RemotePlaybackManager implements RemotePlaybackStrategy {
          return;
       }
 
-      // Get the video element
-      const videoElement = getVideoElement(this._player);
+      // Get the media element
+      const mediaElement = getMediaElement(this._player);
 
-      if (!videoElement) {
-         this.plugin?.log.error('Video element not found!');
+      if (!mediaElement) {
+         this.plugin?.log.error('Media element with Remote Playback API support not found!');
          return;
       }
 
       // Only after all checks do we hold a reference to the Remote Playback API
-      this._remotePlayback = videoElement.remote || null;
+      this._remotePlayback = mediaElement.remote || null;
       this._setupEventListeners();
       this.plugin?.log('Remote Playback API strategy initialization successful.');
    }

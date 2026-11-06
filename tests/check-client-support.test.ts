@@ -10,12 +10,18 @@ describe('check-client-support', () => {
       // These properties don't exist in a stock environment (since RemotePlayback API
       // isn't standard yet). So we always remove them after each test.
       delete (HTMLVideoElement.prototype as any).remote;
+      delete (HTMLMediaElement.prototype as any).remote;
       delete (window as any).WebKitPlaybackTargetAvailabilityEvent;
    });
 
-   it('returns true when Remote Playback API is available', () => {
-      Object.defineProperty(HTMLVideoElement.prototype, 'remote', { value: {}, writable: true, configurable: true });
+   it('recognizes Remote Playback API inherited from the media prototype', () => {
+      Object.defineProperty(HTMLMediaElement.prototype, 'remote', { value: {}, writable: true, configurable: true });
       expect(checkClientSupport()).toBe(true);
+   });
+
+   it('does not recognize Remote Playback API added only to the video prototype', () => {
+      Object.defineProperty(HTMLVideoElement.prototype, 'remote', { value: {}, writable: true, configurable: true });
+      expect(checkClientSupport()).toBe(false);
    });
 
    it('returns false when Remote Playback API is unavailable', () => {

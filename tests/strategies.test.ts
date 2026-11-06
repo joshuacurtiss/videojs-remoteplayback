@@ -19,8 +19,10 @@ vi.mock('../src/js/lib/check-client-support', () => {
 });
 
 interface StrategyContext {
-   player: VideoJsPlayer;
-   videoElement: HTMLVideoElement & {
+   player: VideoJsPlayer & {
+      tech: ReturnType<typeof vi.fn<() => { el: ReturnType<typeof vi.fn> }>>;
+   };
+   mediaElement: HTMLMediaElement & {
       remote: {
          addEventListener: ReturnType<typeof vi.fn>;
          cancelWatchAvailability: ReturnType<typeof vi.fn>;
@@ -46,9 +48,10 @@ interface StrategyFixture {
    buildManager(player: VideoJsPlayer): RemotePlaybackStrategy;
    assertPrompt(context: StrategyContext): void;
    assertDispose(context: StrategyContext): void;
+   assertEvents(context: StrategyContext): void;
 }
 
-function createContext(): StrategyContext {
+function createContext(tag: 'audio' | 'video'): StrategyContext {
    const pluginLog = vi.fn() as StrategyContext['pluginLog'];
 
    pluginLog.error = vi.fn();
@@ -59,20 +62,20 @@ function createContext(): StrategyContext {
       prompt: vi.fn().mockResolvedValue(undefined),
       removeEventListener: vi.fn(),
       state: 'disconnected' as const,
-      watchAvailability: vi.fn().mockResolvedValue(undefined),
+      watchAvailability: vi.fn().mockResolvedValue(1),
    };
 
-   const videoElement = document.createElement('video') as StrategyContext['videoElement'];
+   const mediaElement = document.createElement(tag) as StrategyContext['mediaElement'];
 
-   (videoElement.remote as any) = remotePlayback;
-   videoElement.addEventListener = vi.fn();
-   videoElement.removeEventListener = vi.fn();
-   videoElement.webkitCurrentPlaybackTargetIsWireless = false;
-   videoElement.webkitShowPlaybackTargetPicker = vi.fn();
+   Object.defineProperty(mediaElement, 'remote', { value: remotePlayback, configurable: true });
+   vi.spyOn(mediaElement, 'addEventListener');
+   vi.spyOn(mediaElement, 'removeEventListener');
+   mediaElement.webkitCurrentPlaybackTargetIsWireless = false;
+   mediaElement.webkitShowPlaybackTargetPicker = vi.fn();
 
    const player = {
-      el: vi.fn().mockReturnValue({
-         querySelector: vi.fn().mockReturnValue(videoElement),
+      tech: vi.fn().mockReturnValue({
+         el: vi.fn().mockReturnValue(mediaElement),
       }),
       off: vi.fn(),
       on: vi.fn(),
@@ -86,7 +89,7 @@ function createContext(): StrategyContext {
    return {
       player,
       pluginLog,
-      videoElement,
+      mediaElement,
    };
 }
 
@@ -97,45 +100,32 @@ const STRATEGIES: StrategyFixture[] = [
       setupEnvironment: () => {
          vi.mocked(checkClientSupport).mockReturnValue(true);
          vi.mocked(checkClientSupportWithAirPlay).mockReturnValue(true);
-
-         Object.defineProperty(HTMLVideoElement.prototype, 'remote', {
-            configurable: true,
-            value: {},
-            writable: true,
-         });
-
-         Object.defineProperty(HTMLVideoElement.prototype, 'webkitShowPlaybackTargetPicker', {
-            configurable: true,
-            value: vi.fn(),
-            writable: true,
-         });
-
-         Object.defineProperty(HTMLVideoElement.prototype, 'webkitCurrentPlaybackTargetIsWireless', {
-            configurable: true,
-            value: false,
-            writable: true,
-         });
-
-         Object.defineProperty(window, 'WebKitPlaybackTargetAvailabilityEvent', {
-            configurable: true,
-            value: class MockWebKitPlaybackTargetAvailabilityEvent extends Event {
-               public availability: 'available' | 'not-available' = 'available';
-            },
-            writable: true,
-         });
       },
       buildManager: (player) => {
          return new AirPlayManager(player);
       },
-      assertPrompt: ({ videoElement }) => {
-         expect(videoElement.webkitShowPlaybackTargetPicker).toHaveBeenCalledTimes(1);
+      assertPrompt: ({ mediaElement }) => {
+         expect(mediaElement.webkitShowPlaybackTargetPicker).toHaveBeenCalledTimes(1);
       },
-      assertDispose: ({ videoElement }) => {
-         expect(videoElement.removeEventListener).toHaveBeenCalledWith(
+      assertEvents: ({ mediaElement, player }) => {
+         const available = new Event('webkitplaybacktargetavailabilitychanged');
+
+         Object.defineProperty(available, 'availability', { value: 'available' });
+         mediaElement.dispatchEvent(available);
+         expect(player.trigger).toHaveBeenCalledWith(EVENTS.AVAILABLE);
+         mediaElement.webkitCurrentPlaybackTargetIsWireless = true;
+         mediaElement.dispatchEvent(new Event('webkitcurrentplaybacktargetiswirelesschanged'));
+         expect(player.trigger).toHaveBeenCalledWith(EVENTS.CONNECTED);
+         mediaElement.webkitCurrentPlaybackTargetIsWireless = false;
+         mediaElement.dispatchEvent(new Event('webkitcurrentplaybacktargetiswirelesschanged'));
+         expect(player.trigger).toHaveBeenCalledWith(EVENTS.DISCONNECTED);
+      },
+      assertDispose: ({ mediaElement }) => {
+         expect(mediaElement.removeEventListener).toHaveBeenCalledWith(
             'webkitplaybacktargetavailabilitychanged',
             expect.any(Function)
          );
-         expect(videoElement.removeEventListener).toHaveBeenCalledWith(
+         expect(mediaElement.removeEventListener).toHaveBeenCalledWith(
             'webkitcurrentplaybacktargetiswirelesschanged',
             expect.any(Function)
          );
@@ -147,66 +137,100 @@ const STRATEGIES: StrategyFixture[] = [
       setupEnvironment: () => {
          vi.mocked(checkClientSupport).mockReturnValue(true);
          vi.mocked(checkClientSupportWithAirPlay).mockReturnValue(false);
-
-         Object.defineProperty(HTMLVideoElement.prototype, 'remote', {
-            configurable: true,
-            value: {},
-            writable: true,
-         });
       },
       buildManager: (player) => {
          return new RemotePlaybackManager(player);
       },
-      assertPrompt: ({ videoElement }) => {
-         expect(videoElement.remote.prompt).toHaveBeenCalledTimes(1);
+      assertPrompt: ({ mediaElement }) => {
+         expect(mediaElement.remote.prompt).toHaveBeenCalledTimes(1);
       },
-      assertDispose: ({ videoElement }) => {
-         expect(videoElement.remote.removeEventListener).toHaveBeenCalledWith('connect', expect.any(Function));
-         expect(videoElement.remote.removeEventListener).toHaveBeenCalledWith('connecting', expect.any(Function));
-         expect(videoElement.remote.removeEventListener).toHaveBeenCalledWith('disconnect', expect.any(Function));
-         expect(videoElement.remote.cancelWatchAvailability).toHaveBeenCalledTimes(1);
+      assertEvents: ({ mediaElement, player }) => {
+         const availability = mediaElement.remote.watchAvailability.mock.calls[0][0];
+
+         availability(true);
+         expect(player.trigger).toHaveBeenNthCalledWith(1, EVENTS.AVAILABLE);
+         availability(false);
+         expect(player.trigger).toHaveBeenNthCalledWith(2, EVENTS.UNAVAILABLE);
+         for (const [ event, expected ] of [
+            [ 'connecting', EVENTS.CONNECTING ],
+            [ 'connect', EVENTS.CONNECTED ],
+            [ 'disconnect', EVENTS.DISCONNECTED ],
+         ]) {
+            const listener = mediaElement.remote.addEventListener.mock.calls.find(([ name ]) => { return name === event; });
+
+            expect(listener).toBeDefined();
+            listener?.[1]();
+            expect(player.trigger).toHaveBeenCalledWith(expected);
+         }
+      },
+      assertDispose: ({ mediaElement }) => {
+         expect(mediaElement.remote.removeEventListener).toHaveBeenCalledWith('connect', expect.any(Function));
+         expect(mediaElement.remote.removeEventListener).toHaveBeenCalledWith('connecting', expect.any(Function));
+         expect(mediaElement.remote.removeEventListener).toHaveBeenCalledWith('disconnect', expect.any(Function));
+         expect(mediaElement.remote.cancelWatchAvailability).toHaveBeenCalledWith(1);
       },
    },
 ];
 
 describe.each(STRATEGIES)('$name', (strategy) => {
-   let context: StrategyContext,
-       manager: RemotePlaybackStrategy;
+   describe.each([ 'video', 'audio' ] as const)('with %s', (tag) => {
+      let context: StrategyContext,
+          manager: RemotePlaybackStrategy;
 
-   beforeEach(() => {
-      vi.clearAllMocks();
-      strategy.setupEnvironment();
-      context = createContext();
-      manager = strategy.buildManager(context.player);
-   });
+      beforeEach(() => {
+         vi.clearAllMocks();
+         strategy.setupEnvironment();
+         context = createContext(tag);
+         manager = strategy.buildManager(context.player);
+      });
 
-   it('exposes the expected strategy kind', () => {
-      expect(manager.kind).toBe(strategy.kind);
-   });
+      it('exposes the expected strategy kind', () => {
+         expect(manager.kind).toBe(strategy.kind);
+      });
 
-   it('returns the player passed to the constructor', () => {
-      expect(manager.player).toBe(context.player);
-   });
+      it('returns the player passed to the constructor', () => {
+         expect(manager.player).toBe(context.player);
+      });
 
-   it('creates a button that delegates clicks to prompt', () => {
-      const triggerSpy = vi.spyOn(context.player, 'trigger'),
-            mockEvent = {} as videojs.EventTarget.Event,
-            button = new BaseButton(context.player);
+      it('creates a button that delegates clicks to prompt', () => {
+         const triggerSpy = vi.spyOn(context.player, 'trigger'),
+               mockEvent = {} as videojs.EventTarget.Event,
+               button = new BaseButton(context.player);
 
-      expect(button).toBeDefined();
-      expect(button?.buildCSSClass()).toContain('vjs-remoteplayback-button');
-      button?.handleClick(mockEvent);
-      expect(triggerSpy).toHaveBeenCalledTimes(1);
-      expect(triggerSpy).toHaveBeenCalledWith(EVENTS.PROMPT_REQUESTED);
-   });
+         expect(button).toBeDefined();
+         expect(button?.buildCSSClass()).toContain('vjs-remoteplayback-button');
+         button?.handleClick(mockEvent);
+         expect(triggerSpy).toHaveBeenCalledTimes(1);
+         expect(triggerSpy).toHaveBeenCalledWith(EVENTS.PROMPT_REQUESTED);
+      });
 
-   it('prompts using the strategy-specific browser API', async () => {
-      await expect(manager.prompt()).resolves.toBeUndefined();
-      strategy.assertPrompt(context);
-   });
+      it('prompts using the strategy-specific browser API', async () => {
+         await expect(manager.prompt()).resolves.toBeUndefined();
+         strategy.assertPrompt(context);
+      });
 
-   it('disposes of all resources and event listeners', () => {
-      manager.dispose();
-      strategy.assertDispose(context);
+      it('forwards availability and connection events to the player', () => {
+         strategy.assertEvents(context);
+      });
+
+      it('reports an unavailable media element without prompting', async () => {
+         context.player.tech.mockReturnValue({
+            el: vi.fn().mockReturnValue(null),
+         });
+         const missingManager = strategy.buildManager(context.player);
+
+         expect(context.pluginLog.error).toHaveBeenCalledWith(expect.stringMatching(/not found/i));
+         await missingManager.prompt();
+         expect(context.pluginLog.error).toHaveBeenCalledWith(expect.stringMatching(/^no .+ was captured during initialization/i));
+         expect(context.mediaElement.remote.prompt).not.toHaveBeenCalled();
+         expect(context.mediaElement.webkitShowPlaybackTargetPicker).not.toHaveBeenCalled();
+         missingManager.dispose();
+      });
+
+      it('disposes of all resources and event listeners', async () => {
+         await Promise.resolve();
+         manager.dispose();
+         strategy.assertDispose(context);
+      });
    });
 });
