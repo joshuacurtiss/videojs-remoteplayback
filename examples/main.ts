@@ -6,21 +6,27 @@ import '../src/styles/index.scss';
 
 initializePlugin(videojs);
 
+const videoPlayer = videojs('remoteplayback-video-player'),
+      audioPlayer = videojs('remoteplayback-audio-player');
 
-const player = videojs('remoteplayback-test-player'),
-      disposePlayerButton = document.getElementById('dispose-player-btn');
+[ videoPlayer, audioPlayer ].forEach((testPlayer) => {
+   if (isPlayerWithRemotePlaybackPlugin(testPlayer)) {
+      testPlayer.remotePlayback();
+   } else {
+      videojs.log.error('Failed to startup Remote Playback plugin.');
+   }
+});
 
-if (isPlayerWithRemotePlaybackPlugin(player)) {
-   player.remotePlayback();
-} else {
-   videojs.log.error('Failed to startup Remote Playback plugin.');
-}
+function disposePlayer(this: HTMLElement): void {
+   const mediaEl = this.closest('.player-container')?.querySelector('video, audio'),
+         player = mediaEl?.id ? videojs.getPlayer(mediaEl.id) : undefined;
 
-function disposeTestPlayer(): void {
    if (!player || player.isDisposed()) {
       return;
    }
    player.dispose();
 }
 
-disposePlayerButton?.addEventListener('click', disposeTestPlayer);
+document.querySelectorAll<HTMLButtonElement>('button.dispose-btn').forEach((btn) => {
+   btn.addEventListener('click', disposePlayer);
+});

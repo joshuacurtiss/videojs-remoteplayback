@@ -11,7 +11,7 @@
          margin: 0 auto;
          padding: 20px;
       }
-      .video-container {
+      .player-container {
          margin: 20px 0;
       }
       .actions {
@@ -25,9 +25,10 @@
    </style>
 </head>
 <body>
-   <div class="video-container">
+   <div class="player-container">
+      <h2>Video player</h2>
       <video
-         id="remoteplayback-test-player"
+         id="remoteplayback-video-player"
          class="video-js vjs-default-skin vjs-fluid"
          controls
          preload="auto"
@@ -41,7 +42,23 @@
          </p>
       </video>
       <div class="actions">
-         <button id="dispose-player-btn" type="button">Dispose Player</button>
+         <button class="dispose-btn" type="button">Dispose Player</button>
+      </div>
+   </div>
+
+   <div class="player-container">
+      <h2>Audio-only player</h2>
+      <audio
+         id="remoteplayback-audio-player"
+         class="video-js vjs-default-skin"
+         controls
+         preload="auto"
+         data-setup="{}">
+         <source src="https://mdn.github.io/webaudio-examples/audio-basics/outfoxing.mp3" type="audio/mpeg">
+         <p class="vjs-no-js">To listen to this audio please enable JavaScript.</p>
+      </audio>
+      <div class="actions">
+         <button class="dispose-btn" type="button">Dispose Player</button>
       </div>
    </div>
 
