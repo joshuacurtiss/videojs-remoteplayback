@@ -2,15 +2,16 @@
 
 ## What
 
-A [Video.js][videojs] plugin that enables remote playback capabilities for casting video
-content to Chromecast and AirPlay devices using [Remote Playback API][remoteplaybackapi].
+A [Video.js][videojs] plugin that enables remote playback capabilities for casting audio
+and video content to Chromecast and AirPlay devices using
+[Remote Playback API][remoteplaybackapi].
 
 ## Why
 
-Modern users expect seamless video experiences across all their devices. Whether they're
-watching on a laptop and want to cast to their TV via Chromecast or Google TV Streamer, or
-streaming from an iPhone to an Apple TV using AirPlay, remote playback has become an
-essential feature for video applications.
+Modern users expect seamless media experiences across all their devices. Whether they're
+watching on a laptop and want to cast to their TV via Chromecast or Google TV Streamer,
+streaming from an iPhone to an Apple TV using AirPlay, or streaming audio to a wireless
+speaker, remote playback has become an essential feature for audio/video applications.
 
 While Video.js provides excellent video playback capabilities, it lacks built-in support
 for casting to external devices. This plugin bridges that gap with the native

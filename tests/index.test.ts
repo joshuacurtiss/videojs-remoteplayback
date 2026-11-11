@@ -48,8 +48,8 @@ function createPlayerContext(): PlayerContext {
 
    const player = {
       currentTime: vi.fn(),
-      el: vi.fn().mockReturnValue({
-         querySelector: vi.fn().mockReturnValue(videoElement),
+      tech: vi.fn().mockReturnValue({
+         el: vi.fn().mockReturnValue(videoElement),
       }),
       getChild: vi.fn((componentName: string) => {
          if (componentName === COMPONENT_NAMES.CONTROL_BAR) {
