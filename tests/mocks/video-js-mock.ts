@@ -13,6 +13,7 @@ export class MockButton {
    public constructor(player: VideoJsPlayer) {
       this._player = player;
       this._el = document.createElement('button');
+      this._el.className = this.buildCSSClass();
    }
 
    public el(): HTMLButtonElement {

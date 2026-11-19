@@ -17,6 +17,7 @@ export class RemotePlaybackManager implements RemotePlaybackStrategy {
    private readonly _player: VideoJsPlayer;
    private _remotePlayback: RemotePlayback | null = null;
    private _availabilityWatchId: number | null = null;
+   private _isAvailable = false;
 
    public constructor(player: VideoJsPlayer) {
       this._player = player;
@@ -43,6 +44,10 @@ export class RemotePlaybackManager implements RemotePlaybackStrategy {
 
    public get player(): VideoJsPlayer {
       return this._player;
+   }
+
+   public get isAvailable(): boolean {
+      return this._isAvailable;
    }
 
    /**
@@ -92,7 +97,13 @@ export class RemotePlaybackManager implements RemotePlaybackStrategy {
 
       this._remotePlayback
          .watchAvailability((available: boolean): void => {
+            // A race condition could exist if this fired before disposal completes.
+            // So, check Remote Playback API is still available before proceeding.
+            if (!this._remotePlayback) {
+               return;
+            }
             this.plugin?.log('Availability changed:', available);
+            this._isAvailable = available;
             this._player.trigger(available ? EVENTS.AVAILABLE : EVENTS.UNAVAILABLE);
          })
          .then((id) => {

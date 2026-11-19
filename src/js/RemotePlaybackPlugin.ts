@@ -12,6 +12,7 @@ export interface RemotePlaybackStrategy {
    kind: 'AirPlay' | 'RemotePlaybackAPI';
    dispose(): void;
    prompt(): Promise<void>;
+   get isAvailable(): boolean;
    get player(): VideoJsPlayer;
 }
 

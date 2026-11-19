@@ -2,6 +2,7 @@ import type videojs from 'video.js';
 import type { VideoJs } from '../../../@types/videojs';
 import type { RemotePlaybackButtonConstructor } from './index';
 import EVENTS from '../constants/events';
+import { isPlayerWithRemotePlaybackPlugin } from '../RemotePlaybackPlugin';
 
 // INTERFACES
 
@@ -26,6 +27,7 @@ const CSS_CLASSES = {
    CONNECTED: 'connected',
    CONNECTING: 'connecting',
    ICON_PLACEHOLDER: 'vjs-icon-placeholder',
+   VJS_HIDDEN: 'vjs-hidden',
 } as const;
 
 /**
@@ -77,10 +79,19 @@ export function createBaseButtonConstructor(videojs: VideoJs): RemotePlaybackBut
          Object.entries(this._listeners).forEach(([ event, listener ]) => {
             this.player().on(event, listener);
          });
+
+         // If the button was created after the plugin was initialized and/or availability
+         // has already been determined, we want to explicitly show the button. Otherwise,
+         // the button will stay hidden until the next availability change event.
+         if (isPlayerWithRemotePlaybackPlugin(player) && player.usingPlugin('remotePlayback')) {
+            if (player.remotePlayback().strategy?.isAvailable) {
+               this.show();
+            }
+         }
       }
 
       public buildCSSClass(): string {
-         return `${CSS_CLASSES.BUTTON} ${super.buildCSSClass()}`;
+         return `${CSS_CLASSES.BUTTON} ${CSS_CLASSES.VJS_HIDDEN} ${super.buildCSSClass()}`;
       }
 
       public handleClick(): void {

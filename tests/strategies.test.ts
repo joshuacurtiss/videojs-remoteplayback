@@ -49,10 +49,12 @@ interface StrategyFixture {
    assertPrompt(context: StrategyContext): void;
    assertDispose(context: StrategyContext): void;
    assertEvents(context: StrategyContext): void;
+   setAvailability(context: StrategyContext, available: boolean): void;
 }
 
 function createContext(tag: 'audio' | 'video'): StrategyContext {
-   const pluginLog = vi.fn() as StrategyContext['pluginLog'];
+   const pluginLog = vi.fn() as StrategyContext['pluginLog'],
+         listeners: Record<string, Array<() => void>> = {};
 
    pluginLog.error = vi.fn();
 
@@ -77,12 +79,20 @@ function createContext(tag: 'audio' | 'video'): StrategyContext {
       tech: vi.fn().mockReturnValue({
          el: vi.fn().mockReturnValue(mediaElement),
       }),
+      currentTime: vi.fn(),
       off: vi.fn(),
-      on: vi.fn(),
+      on: vi.fn((event: string, listener: () => void) => {
+         (listeners[event] ||= []).push(listener);
+      }),
+      pause: vi.fn(),
+      play: vi.fn(),
+      ready: vi.fn(),
       remotePlayback: vi.fn().mockReturnValue({
          log: pluginLog,
       }),
-      trigger: vi.fn(),
+      trigger: vi.fn((event: string) => {
+         listeners[event]?.forEach((listener) => { listener(); });
+      }),
       usingPlugin: vi.fn().mockReturnValue(true),
    } as unknown as StrategyContext['player'];
 
@@ -106,6 +116,12 @@ const STRATEGIES: StrategyFixture[] = [
       },
       assertPrompt: ({ mediaElement }) => {
          expect(mediaElement.webkitShowPlaybackTargetPicker).toHaveBeenCalledTimes(1);
+      },
+      setAvailability: ({ mediaElement }, available) => {
+         const event = new Event('webkitplaybacktargetavailabilitychanged');
+
+         Object.defineProperty(event, 'availability', { value: available ? 'available' : 'not-available' });
+         mediaElement.dispatchEvent(event);
       },
       assertEvents: ({ mediaElement, player }) => {
          const available = new Event('webkitplaybacktargetavailabilitychanged');
@@ -143,6 +159,9 @@ const STRATEGIES: StrategyFixture[] = [
       },
       assertPrompt: ({ mediaElement }) => {
          expect(mediaElement.remote.prompt).toHaveBeenCalledTimes(1);
+      },
+      setAvailability: ({ mediaElement }, available) => {
+         mediaElement.remote.watchAvailability.mock.calls[0][0](available);
       },
       assertEvents: ({ mediaElement, player }) => {
          const availability = mediaElement.remote.watchAvailability.mock.calls[0][0];
@@ -182,6 +201,7 @@ describe.each(STRATEGIES)('$name', (strategy) => {
          strategy.setupEnvironment();
          context = createContext(tag);
          manager = strategy.buildManager(context.player);
+         Object.assign(context.player.remotePlayback(), { strategy: manager });
       });
 
       it('exposes the expected strategy kind', () => {
@@ -213,10 +233,34 @@ describe.each(STRATEGIES)('$name', (strategy) => {
          strategy.assertEvents(context);
       });
 
+      it('synchronizes late-added buttons and follows subsequent availability changes', () => {
+         const earlyButton = new BaseButton(context.player);
+
+         let buttonCreatedByEvent: videojs.Button | undefined;
+
+         context.player.on(EVENTS.AVAILABLE, () => {
+            buttonCreatedByEvent = new BaseButton(context.player);
+         });
+
+         expect(earlyButton.el().classList.contains('vjs-hidden')).toBe(true);
+         strategy.setAvailability(context, true);
+         expect(earlyButton.el().classList.contains('vjs-hidden')).toBe(false);
+         expect(buttonCreatedByEvent?.el().classList.contains('vjs-hidden')).toBe(false);
+
+         const lateButton = new BaseButton(context.player);
+
+         expect(lateButton.el().classList.contains('vjs-hidden')).toBe(false);
+         strategy.setAvailability(context, false);
+         expect(earlyButton.el().classList.contains('vjs-hidden')).toBe(true);
+         expect(lateButton.el().classList.contains('vjs-hidden')).toBe(true);
+         expect(new BaseButton(context.player).el().classList.contains('vjs-hidden')).toBe(true);
+      });
+
       it('reports an unavailable media element without prompting', async () => {
          context.player.tech.mockReturnValue({
             el: vi.fn().mockReturnValue(null),
          });
+
          const missingManager = strategy.buildManager(context.player);
 
          expect(context.pluginLog.error).toHaveBeenCalledWith(expect.stringMatching(/not found/i));
@@ -232,5 +276,31 @@ describe.each(STRATEGIES)('$name', (strategy) => {
          manager.dispose();
          strategy.assertDispose(context);
       });
+   });
+});
+
+describe('RemotePlaybackManager availability monitoring failures', () => {
+   beforeEach(() => {
+      vi.clearAllMocks();
+      vi.mocked(checkClientSupport).mockReturnValue(true);
+   });
+
+   it('keeps buttons hidden when monitoring is unsupported', async () => {
+      const context = createContext('video'),
+            error = new DOMException('Monitoring failed', 'NotSupportedError');
+
+      context.mediaElement.remote.watchAvailability.mockRejectedValue(error);
+      const manager = new RemotePlaybackManager(context.player);
+
+      Object.assign(context.player.remotePlayback(), { strategy: manager });
+      const button = new BaseButton(context.player);
+
+      await vi.waitFor(() => {
+         expect(context.pluginLog.error).toHaveBeenCalledWith('Failed to watch availability.', error);
+      });
+      expect(manager.isAvailable).toBe(false);
+      expect(button.el().classList.contains('vjs-hidden')).toBe(true);
+      expect(new BaseButton(context.player).el().classList.contains('vjs-hidden')).toBe(true);
+      expect(context.player.trigger).not.toHaveBeenCalledWith(EVENTS.AVAILABLE);
    });
 });

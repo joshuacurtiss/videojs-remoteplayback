@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { compile } from 'sass';
 import './mocks/video-js-mock';
 import videojs from 'video.js';
 import type { MockButton } from './mocks/video-js-mock';
@@ -113,6 +114,17 @@ describe('BaseButton', () => {
       expect(button.el().querySelector('.vjs-remoteplayback-button-label')).toBeNull();
    });
 
+   it('stays hidden without initializing a plugin that is not in use', () => {
+      const { player } = createContext();
+
+      Object.assign(player, { ready: vi.fn(), currentTime: vi.fn(), play: vi.fn(), pause: vi.fn() });
+      player.usingPlugin.mockReturnValue(false);
+      const button = new BaseButton(player);
+
+      expect(button.el().classList.contains('vjs-hidden')).toBe(true);
+      expect(player.remotePlayback).not.toHaveBeenCalled();
+   });
+
    it('reacts to player events with expected class and visibility changes', () => {
       const { player, listeners } = createContext(),
             button = new BaseButton(player);
@@ -137,6 +149,40 @@ describe('BaseButton', () => {
 
       expect(showSpy).toHaveBeenCalledTimes(1);
       expect(hideSpy).toHaveBeenCalledTimes(1);
+   });
+
+   it('adds vjs-hidden class on UNAVAILABLE and removes it on AVAILABLE', () => {
+      const { player, listeners } = createContext(),
+            button = new BaseButton(player);
+
+      listeners[EVENTS.UNAVAILABLE]?.();
+      expect(button.el().classList.contains('vjs-hidden')).toBe(true);
+
+      listeners[EVENTS.AVAILABLE]?.();
+      expect(button.el().classList.contains('vjs-hidden')).toBe(false);
+   });
+
+   it.each([ true, false ])('renders visibility changes with addLabelToButton=%s', (addLabelToButton) => {
+      const { player, listeners } = createContext(),
+            button = new BaseButton(player, { addLabelToButton }),
+            styles = document.createElement('style');
+
+      styles.textContent = `.vjs-hidden { display: none !important; }\n${compile('src/styles/buttons.scss').css}`;
+      document.head.appendChild(styles);
+      document.body.appendChild(button.el());
+
+      try {
+         expect(getComputedStyle(button.el()).display).toBe('none');
+
+         listeners[EVENTS.AVAILABLE]?.();
+         expect(getComputedStyle(button.el()).display).toBe('flex');
+
+         listeners[EVENTS.UNAVAILABLE]?.();
+         expect(getComputedStyle(button.el()).display).toBe('none');
+      } finally {
+         button.el().remove();
+         styles.remove();
+      }
    });
 
    it('buildCSSClass prepends the component class', () => {

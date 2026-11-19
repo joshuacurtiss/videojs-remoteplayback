@@ -25,23 +25,17 @@ export class AirPlayManager implements RemotePlaybackStrategy {
          }
 
          this.plugin?.log('AirPlay availability changed:', event.availability);
-         if (event.availability === 'available') {
-            this._player.trigger(EVENTS.AVAILABLE);
-         } else {
-            this._player.trigger(EVENTS.UNAVAILABLE);
-         }
+         this._isAvailable = event.availability === 'available';
+         this._player.trigger(this._isAvailable ? EVENTS.AVAILABLE : EVENTS.UNAVAILABLE);
       },
       'webkitcurrentplaybacktargetiswirelesschanged': () => {
          this.plugin?.log('AirPlay playback target changed. Is wireless:', this._mediaElement?.webkitCurrentPlaybackTargetIsWireless);
-         if (this._mediaElement?.webkitCurrentPlaybackTargetIsWireless) {
-            this._player.trigger(EVENTS.CONNECTED);
-         } else {
-            this._player.trigger(EVENTS.DISCONNECTED);
-         }
+         this._player.trigger(this._mediaElement?.webkitCurrentPlaybackTargetIsWireless ? EVENTS.CONNECTED : EVENTS.DISCONNECTED);
       },
    };
    private readonly _player: VideoJsPlayer;
    private _mediaElement: HTMLMediaElementWithAirPlay | null = null;
+   private _isAvailable = false;
 
    public constructor(player: VideoJsPlayer) {
       this._player = player;
@@ -68,6 +62,10 @@ export class AirPlayManager implements RemotePlaybackStrategy {
 
    public get player(): VideoJsPlayer {
       return this._player;
+   }
+
+   public get isAvailable(): boolean {
+      return this._isAvailable;
    }
 
    /**

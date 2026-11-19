@@ -30,7 +30,7 @@
    }
 
    // When label is NOT shown (default behavior), auto-size to fit icon
-   &:not(.vjs-remoteplayback-button-lg) {
+   &:not(.vjs-remoteplayback-button-lg):not(.vjs-hidden) {
       display: flex !important;
       align-items: center;
       justify-content: center;

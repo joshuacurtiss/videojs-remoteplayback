@@ -148,6 +148,9 @@ on the Video.js docs). Use these options to configure the plugin:
      So, if you want different behavior based on presence of AirPlay or not, you will need
      to handle that logic.
 
+The button starts hidden and appears only when remote playback availability is confirmed.
+If the browser cannot monitor availability, the button remains hidden.
+
 ## How do I contribute?
 
 We genuinely appreciate external contributions. See [our extensive
