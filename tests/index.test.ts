@@ -25,7 +25,7 @@ interface PlayerContext {
    player: VideoJsPlayer;
 }
 
-function createPlayerContext(): PlayerContext {
+function createPlayerContext(remotePlaybackSupported = true): PlayerContext {
    const listeners: Record<string, () => void> = {},
          videoElement = document.createElement('video');
 
@@ -35,16 +35,18 @@ function createPlayerContext(): PlayerContext {
       getChild: vi.fn().mockReturnValue(null),
    };
 
-   Object.defineProperty(videoElement, 'remote', {
-      writable: true,
-      value: {
-         addEventListener: vi.fn(),
-         cancelWatchAvailability: vi.fn().mockResolvedValue(undefined),
-         prompt: vi.fn().mockResolvedValue(undefined),
-         removeEventListener: vi.fn(),
-         watchAvailability: vi.fn().mockResolvedValue(1),
-      } as unknown as RemotePlayback,
-   });
+   if (remotePlaybackSupported) {
+      Object.defineProperty(videoElement, 'remote', {
+         writable: true,
+         value: {
+            addEventListener: vi.fn(),
+            cancelWatchAvailability: vi.fn().mockResolvedValue(undefined),
+            prompt: vi.fn().mockResolvedValue(undefined),
+            removeEventListener: vi.fn(),
+            watchAvailability: vi.fn().mockResolvedValue(1),
+         } as unknown as RemotePlayback,
+      });
+   }
 
    const player = {
       currentTime: vi.fn(),
@@ -119,6 +121,17 @@ describe('Remote Playback Plugin', () => {
             plugin = new RemotePlaybackPluginConstructor(player, { addButtonToControlBar: false }) as RemotePlaybackPlugin;
 
       expect(plugin.strategy).toBeDefined();
+      expect(controlBar.addChild).not.toHaveBeenCalled();
+   });
+
+   it('does not add remote playback button when the client is unsupported', () => {
+      vi.mocked(checkClientSupport).mockReturnValue(false);
+
+      const { controlBar, player } = createPlayerContext(false),
+            RemotePlaybackPluginConstructor = createRemotePlaybackPluginConstructor(videojs),
+            plugin = new RemotePlaybackPluginConstructor(player) as RemotePlaybackPlugin;
+
+      expect(plugin.strategy).toBeUndefined();
       expect(controlBar.addChild).not.toHaveBeenCalled();
    });
 
