@@ -58,13 +58,34 @@ export class MockButton {
 }
 
 vi.mock('video.js', () => {
+   const createLog = (): MockPlugin['log'] => {
+      const log = vi.fn() as MockPlugin['log'];
+
+      log.debug = vi.fn();
+      log.warn = vi.fn();
+      log.error = vi.fn();
+      log.level = vi.fn();
+      log.levels = {
+         DEFAULT: '',
+         all: '',
+         off: '',
+         debug: '',
+         info: '',
+         warn: '',
+         error: '',
+      };
+
+      return log;
+   };
+
    class MockPlugin {
-      public readonly log: ReturnType<typeof vi.fn> & { error: ReturnType<typeof vi.fn> };
+      public readonly log: ReturnType<typeof vi.fn> &
+         Record<'debug' | 'warn' | 'error' | 'level', ReturnType<typeof vi.fn>> &
+         Pick<VideoJs['log'], 'levels'>;
       public readonly player: VideoJsPlayer;
 
       public constructor(player: VideoJsPlayer) {
-         this.log = vi.fn() as MockPlugin['log'];
-         this.log.error = vi.fn();
+         this.log = createLog();
          this.player = player;
       }
 
@@ -92,7 +113,11 @@ vi.mock('video.js', () => {
    return {
       default: {
          VERSION: 'test-videojs-version',
-         log: vi.fn(),
+         log: Object.assign(createLog(), {
+            createLogger: vi.fn(() => {
+               return createLog();
+            }),
+         }),
          registerPlugin: vi.fn(),
          registerComponent: vi.fn(),
          getPlugin,

@@ -22,7 +22,7 @@ export default function initializePlugin(videojs: VideoJs): RemotePlaybackPlugin
    videojs.registerComponent(COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON, createButtonConstructor(videojs));
    videojs.registerPlugin('remotePlayback', RemotePlaybackPlugin);
    registeredInstances.set(videojs, RemotePlaybackPlugin);
-   videojs.log(`Remote Playback plugin registered with video.js version ${videojs.VERSION}.`);
+   videojs.log.debug(`Remote Playback plugin registered with video.js version ${videojs.VERSION}.`);
    return RemotePlaybackPlugin;
 }
 

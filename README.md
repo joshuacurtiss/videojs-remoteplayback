@@ -139,6 +139,9 @@ on the Video.js docs). Use these options to configure the plugin:
    * **`plugins.remotePlayback.preferNativeAirPlay`**: A `boolean` that will use native
      AirPlay APIs when AirPlay is available, instead of Remote Playback API.
      Default: `false`.
+   * **`plugins.remotePlayback.logLevel`**: A Video.js log level for this plugin's own
+     logger: `all`, `off`, `debug`, `info`, `warn`, or `error`. This is independent of the
+     global Video.js log level. Default: `error`.
    * **`plugins.remotePlayback.addLabelToButton`**: A `boolean` that indicates whether to
      add a text label next to the button icon.
      Default: `true`.

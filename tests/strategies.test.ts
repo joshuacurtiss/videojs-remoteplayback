@@ -37,6 +37,8 @@ interface StrategyContext {
       removeEventListener: ReturnType<typeof vi.fn>;
    };
    pluginLog: ReturnType<typeof vi.fn> & {
+      debug: ReturnType<typeof vi.fn>;
+      warn: ReturnType<typeof vi.fn>;
       error: ReturnType<typeof vi.fn>;
    };
 }
@@ -56,6 +58,8 @@ function createContext(tag: 'audio' | 'video'): StrategyContext {
    const pluginLog = vi.fn() as StrategyContext['pluginLog'],
          listeners: Record<string, Array<() => void>> = {};
 
+   pluginLog.debug = vi.fn();
+   pluginLog.warn = vi.fn();
    pluginLog.error = vi.fn();
 
    const remotePlayback = {

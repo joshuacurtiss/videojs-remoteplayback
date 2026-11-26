@@ -4,7 +4,7 @@ import videojs from 'video.js';
 import initializePlugin from '../src/js';
 import { createButtonConstructor } from '../src/js/buttons';
 import { COMPONENT_NAMES, createRemotePlaybackPluginConstructor } from '../src/js/RemotePlaybackPlugin';
-import type { RemotePlaybackPlugin } from '../src/js/RemotePlaybackPlugin';
+import type { RemotePlaybackPlugin, RemotePlaybackPluginOptions } from '../src/js/RemotePlaybackPlugin';
 import EVENTS from '../src/js/constants/events';
 import { checkClientSupport, checkClientSupportWithAirPlay } from '../src/js/lib/check-client-support';
 import type { VideoJsPlayer } from '../@types/videojs';
@@ -71,6 +71,8 @@ function createPlayerContext(remotePlaybackSupported = true): PlayerContext {
       }),
       remotePlayback: vi.fn().mockReturnValue({
          log: Object.assign(vi.fn(), {
+            debug: vi.fn(),
+            warn: vi.fn(),
             error: vi.fn(),
          }),
       }),
@@ -100,6 +102,69 @@ describe('Remote Playback Plugin', () => {
 
       expect(initFunction).not.toThrow();
       expect(videojs.registerPlugin).toHaveBeenCalled();
+   });
+
+   it('defaults the plugin logger to the error level', () => {
+      const { player } = createPlayerContext(),
+            RemotePlaybackPluginConstructor = createRemotePlaybackPluginConstructor(videojs),
+            plugin = new RemotePlaybackPluginConstructor(player) as RemotePlaybackPlugin;
+
+      expect(plugin.log.level).toHaveBeenCalledWith('error');
+      expect(plugin.log.warn).not.toHaveBeenCalled();
+   });
+
+   it('applies a custom logLevel to the plugin logger', () => {
+      const { player } = createPlayerContext(),
+            RemotePlaybackPluginConstructor = createRemotePlaybackPluginConstructor(videojs),
+            plugin = new RemotePlaybackPluginConstructor(player, { logLevel: 'debug' }) as RemotePlaybackPlugin;
+
+      expect(plugin.log.level).toHaveBeenCalledWith('debug');
+      expect(plugin.log.warn).not.toHaveBeenCalled();
+   });
+
+   it('warns and falls back to the default for invalid log levels', () => {
+      [ 'verbose', 'toString', 'DEFAULT', undefined ].forEach((logLevel) => {
+         const { controlBar, player } = createPlayerContext(),
+               options: Partial<RemotePlaybackPluginOptions> = {},
+               RemotePlaybackPluginConstructor = createRemotePlaybackPluginConstructor(videojs);
+
+         Object.assign(options, { logLevel });
+
+         const plugin = new RemotePlaybackPluginConstructor(player, options) as RemotePlaybackPlugin;
+
+         expect(plugin.log.warn).toHaveBeenCalledWith(expect.stringMatching(/^Invalid logLevel/));
+         expect(plugin.log.level).toHaveBeenCalledWith('error');
+         expect(controlBar.addChild).toHaveBeenCalledWith(
+            COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON,
+            expect.objectContaining({ logLevel: 'error' }),
+            expect.anything()
+         );
+      });
+   });
+
+   it('creates a dedicated logger when the base plugin does not provide one', () => {
+      const { player } = createPlayerContext(),
+            fallbackLogger = videojs.log.createLogger('fallback'),
+            BasePlugin = videojs.getPlugin('plugin');
+
+      vi.mocked(videojs.log.createLogger).mockReturnValue(fallbackLogger);
+
+      class PluginWithoutLogger extends BasePlugin {
+         public constructor(basePlayer: videojs.Player, options?: object) {
+            super(basePlayer, options);
+            Object.defineProperty(this, 'log', { value: undefined });
+         }
+      }
+
+      vi.spyOn(videojs, 'getPlugin').mockReturnValueOnce(PluginWithoutLogger);
+
+      const RemotePlaybackPluginConstructor = createRemotePlaybackPluginConstructor(videojs),
+            plugin = new RemotePlaybackPluginConstructor(player) as RemotePlaybackPlugin;
+
+      expect(videojs.log.createLogger).toHaveBeenLastCalledWith('RemotePlayback');
+      expect(plugin.log).toBe(fallbackLogger);
+      expect(fallbackLogger.level).toHaveBeenCalledWith('error');
+      expect(videojs.log.level).not.toHaveBeenCalled();
    });
 
    it('adds remote playback button to control bar when addButtonToControlBar is true', () => {

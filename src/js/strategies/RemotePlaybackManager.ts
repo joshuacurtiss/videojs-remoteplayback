@@ -24,7 +24,7 @@ export class RemotePlaybackManager implements RemotePlaybackStrategy {
 
       // Only proceed if the browser supports the Remote Playback API
       if (!checkClientSupport()) {
-         this.plugin?.log.error('Remote Playback API not supported!');
+         this.plugin?.log.warn('Remote Playback API not supported!');
          return;
       }
 
@@ -39,7 +39,7 @@ export class RemotePlaybackManager implements RemotePlaybackStrategy {
       // Only after all checks do we hold a reference to the Remote Playback API
       this._remotePlayback = mediaElement.remote || null;
       this._setupEventListeners();
-      this.plugin?.log('Remote Playback API strategy initialization successful.');
+      this.plugin?.log.debug('Remote Playback API strategy initialization successful.');
    }
 
    public get player(): VideoJsPlayer {
@@ -60,7 +60,7 @@ export class RemotePlaybackManager implements RemotePlaybackStrategy {
       }
       try {
          await this._remotePlayback.prompt();
-         this.plugin?.log('Device picker opened.');
+         this.plugin?.log.debug('Device picker opened.');
       } catch(error) {
          this.plugin?.log.error('Failed to open device picker!', error);
       }
@@ -102,12 +102,12 @@ export class RemotePlaybackManager implements RemotePlaybackStrategy {
             if (!this._remotePlayback) {
                return;
             }
-            this.plugin?.log('Availability changed:', available);
+            this.plugin?.log.debug('Availability changed:', available);
             this._isAvailable = available;
             this._player.trigger(available ? EVENTS.AVAILABLE : EVENTS.UNAVAILABLE);
          })
          .then((id) => {
-            this.plugin?.log('Started watching availability with ID:', id);
+            this.plugin?.log.debug('Started watching availability with ID:', id);
             this._availabilityWatchId = id;
          })
          .catch((error: DOMException) => {

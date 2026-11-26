@@ -11,7 +11,7 @@ const videoPlayer = videojs('remoteplayback-video-player'),
 
 [ videoPlayer, audioPlayer ].forEach((testPlayer) => {
    if (isPlayerWithRemotePlaybackPlugin(testPlayer)) {
-      testPlayer.remotePlayback();
+      testPlayer.remotePlayback({ logLevel: 'debug' });
    } else {
       videojs.log.error('Failed to startup Remote Playback plugin.');
    }

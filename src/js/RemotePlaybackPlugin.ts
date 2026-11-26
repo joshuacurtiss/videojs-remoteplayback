@@ -19,6 +19,8 @@ export interface RemotePlaybackStrategy {
 export interface RemotePlaybackPluginOptions extends Partial<BaseButtonOptions> {
    addButtonToControlBar: boolean;
    preferNativeAirPlay: boolean;
+   // Log level uses standard Video.js levels, excluding `DEFAULT` (isn't a usable level).
+   logLevel: Exclude<keyof videojs.Log['levels'], 'DEFAULT'>;
 }
 
 // This interface is used by the strategy classes as a type-only interface to avoid
@@ -50,6 +52,7 @@ export function isPlayerWithRemotePlaybackPlugin(o: unknown): o is VideoJsPlayer
 const defaultOptions: RemotePlaybackPluginOptions = {
    addButtonToControlBar: true,
    preferNativeAirPlay: false,
+   logLevel: 'error',
 };
 
 export const COMPONENT_NAMES = {
@@ -85,7 +88,20 @@ export function createRemotePlaybackPluginConstructor(videojs: VideoJs): RemoteP
 
       public constructor(player: videojs.Player, options: Partial<RemotePlaybackPluginOptions> = {}) {
          super(player, options);
-         this._options = Object.assign({}, defaultOptions, options);
+         // Video.js <7.9.0 doesn't provide a logger. If that is the case, create one:
+         if (!this.log) {
+            this.log = videojs.log.createLogger('RemotePlayback');
+         }
+         // Sanitize log level and if it is different from what they provided, warn them.
+         let logLevel: unknown = 'logLevel' in options ? options.logLevel : defaultOptions.logLevel;
+
+         if (typeof logLevel !== 'string' || logLevel === 'DEFAULT' || !Object.prototype.hasOwnProperty.call(this.log.levels, logLevel)) {
+            this.log.warn(`Invalid logLevel. Falling back to '${defaultOptions.logLevel}'.`);
+            logLevel = defaultOptions.logLevel;
+         }
+         // Set options, with the sanitized log level
+         this._options = Object.assign({}, defaultOptions, options, { logLevel });
+         this.log.level(this._options.logLevel);
          Object.entries(this._listeners).forEach(([ event, listener ]) => {
             this.player.on(event, listener);
          });
@@ -101,7 +117,7 @@ export function createRemotePlaybackPluginConstructor(videojs: VideoJs): RemoteP
                this.log('Initializing with Remote Playback API strategy.');
                this._strategy = new RemotePlaybackManager(this.player);
             } else {
-               this.log.error('No supported strategies available!');
+               this.log.warn('No supported strategies available!');
                return;
             }
             if (this._options.addButtonToControlBar) {
@@ -111,7 +127,7 @@ export function createRemotePlaybackPluginConstructor(videojs: VideoJs): RemoteP
       }
 
       public dispose(): void {
-         this.log(`Disposing of ${this.strategy?.kind} strategy.`);
+         this.log.debug(`Disposing of ${this.strategy?.kind} strategy.`);
          Object.entries(this._listeners).forEach(([ event, listener ]) => {
             this.player.off(event, listener);
          });
@@ -138,7 +154,7 @@ export function createRemotePlaybackPluginConstructor(videojs: VideoJs): RemoteP
                   insertIndex = fullscreenToggleIndex >= 0 ? fullscreenToggleIndex : children.length;
 
             controlBar.addChild(COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON, this._options, insertIndex);
-            this.log(`Added ${this.strategy?.kind} ${COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON} to control bar at index ${insertIndex}.`);
+            this.log.debug(`Added ${this.strategy?.kind} ${COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON} to control bar index ${insertIndex}.`);
          } catch(error) {
             this.log.error(`Failed to add ${this.strategy?.kind} ${COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON} to control bar,`, error);
          }
