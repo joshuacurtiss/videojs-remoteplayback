@@ -64,8 +64,8 @@ import '@silvermine/videojs-remoteplayback/styles.css';
 
 ### Using a forked video.js build
 
-This plugin expects a `video.js` implementation that is compatible with Video.js 7.x. If
-desired, this could be a forked version of video.js.
+This plugin expects a `video.js` implementation that is compatible with Video.js >=7.3.0
+and <8.0.0. If desired, this could be a forked version of video.js.
 
 The plugin will use the instance of video.js that you pass into `initializePlugin`.
 
